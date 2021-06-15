@@ -1,3 +1,4 @@
+## -*- coding: utf-8 -*-
 import json
 import re
 import pkg_resources
@@ -14,12 +15,16 @@ from xblock.exceptions import JsonHandlerError
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
 
+import logging
+log = logging.getLogger(__name__)
 
+
+@XBlock.needs("i18n")
 class EolConditionalXBlock(XBlock):
 
     display_name = String(
         display_name=_("Display Name"),
-        help=_("Display name for this module"),
+        help=_("Module's display name"),
         default="Eol Conditional XBlock",
         scope=Scope.settings,
     )
@@ -30,15 +35,15 @@ class EolConditionalXBlock(XBlock):
     )
 
     trigger_component = String(
-        display_name = _("ID Componente Gatillante"),
-        help = _("Indica el ID del componente (problema) gatillante. Recuerda que para el ID son 32 caracteres alfanumericos, ejemplo: 4950f7e5541645aa920227e6dc0ea322"),
+        display_name = _("ID trigger component"),
+        help = _("Specifies the ID of the trigger component. Remember that the identifier consists of 32 alphanumeric characters, for example: 4950f7e5541645aa920227e6dc0ea322"),
         default = "None",
         scope = Scope.settings,
     )
 
     conditional_component = String(
-        display_name = _("ID Componentes Condicional"),
-        help = _("Indica los ID de los componentes condicionales, separados por 'comas' o saltos de linea. Recuerda que para el ID son 32 caracteres alfanumericos, ejemplo: 4950f7e5541645aa920227e6dc0ea322"),
+        display_name = _("ID conditional component"),
+        help = _("Specifies the identifiers of the conditional components, separated by commas or newlines. Remember that the identifier is 32 alphanumeric characters long, for example: 4950f7e5541645aa920227e6dc0ea322"),
         default = "None",
         scope = Scope.settings,
     )
@@ -48,6 +53,8 @@ class EolConditionalXBlock(XBlock):
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
+        log.error(data)
+        #return data
         return data.decode("utf8")
 
     def student_view(self, context=None):
@@ -66,13 +73,15 @@ class EolConditionalXBlock(XBlock):
 
     def studio_view(self, context=None):
         context_html = self.get_context()
-        template = self.render_template('static/html/studio.html', context_html)
-        frag = Fragment(template)
+        #template = self.render_template('static/html/studio.html', context_html)
+        #frag = Fragment(template)
+        frag = Fragment()
+        frag.add_content(self.render_template('static/html/studio.html', context_html))
         frag.add_css(self.resource_string("static/css/eolconditional.css"))
         frag.add_javascript(self.resource_string("static/js/src/studio.js"))
         frag.initialize_js('EolConditionalStudioXBlock')
         return frag
-    
+
     def author_view(self, context=None):
         context_html = self.get_context()
         template = self.render_template('static/html/author_view.html', context_html)
@@ -99,10 +108,10 @@ class EolConditionalXBlock(XBlock):
         template = Template(template_str)
         return template.render(Context(context))
 
-    def get_conditional_component_list(self):    
+    def get_conditional_component_list(self):
         conditional_component_list = re.split('\s*,*|\s*,\s*', self.conditional_component)
         return filter(None, conditional_component_list) # filter empty elements
-    
+
     @XBlock.json_handler
     def publish_completion(self, data, dispatch):  # pylint: disable=unused-argument
         """
