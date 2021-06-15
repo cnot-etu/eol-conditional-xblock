@@ -15,8 +15,6 @@ from xblock.exceptions import JsonHandlerError
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
 
-import logging
-log = logging.getLogger(__name__)
 
 
 @XBlock.needs("i18n")
@@ -53,8 +51,6 @@ class EolConditionalXBlock(XBlock):
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        log.error(data)
-        #return data
         return data.decode("utf8")
 
     def student_view(self, context=None):
@@ -73,10 +69,8 @@ class EolConditionalXBlock(XBlock):
 
     def studio_view(self, context=None):
         context_html = self.get_context()
-        #template = self.render_template('static/html/studio.html', context_html)
-        #frag = Fragment(template)
-        frag = Fragment()
-        frag.add_content(self.render_template('static/html/studio.html', context_html))
+        template = self.render_template('static/html/studio.html', context_html)
+        frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/eolconditional.css"))
         frag.add_javascript(self.resource_string("static/js/src/studio.js"))
         frag.initialize_js('EolConditionalStudioXBlock')
